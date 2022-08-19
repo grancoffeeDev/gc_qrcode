@@ -1,3 +1,6 @@
+import 'dart:convert';
+
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_barcode_scanner/flutter_barcode_scanner.dart';
 import 'area_scann.dart';
@@ -54,6 +57,13 @@ class _HomeState extends State<Home> {
                 resultado: code, observacao: obs, valido: valido)
             : const AreaScannImg(),
         BtnVerificar(verificar: readQrCode, limpar: cleanCode),
+        ElevatedButton(
+            onPressed: () async {
+              String jsession = await loginSkw();
+              print(jsession);
+              logoutSkw(jsession.toString());
+            },
+            child: Text('OI'))
       ]),
       backgroundColor: Colors.white,
     );
@@ -67,7 +77,7 @@ String _validacoes(String qrcode) {
   bool contains = qrcode.contains('#');
 
   if (!contains) {
-    retorno = 'ERRO! O QR code \"$qrcode\" não pertence a uma loja ou máquina!';
+    retorno = 'ERRO! O QR code "$qrcode" não pertence a uma loja ou máquina!';
   } else {
     //TODO:: Verifica o patrimônio
     int contagem = qrcode.indexOf('#');
@@ -79,4 +89,21 @@ String _validacoes(String qrcode) {
   }
 
   return retorno;
+}
+
+Future<String> loginSkw() async {
+  String url =
+      'http://sankhya.grancoffee.com.br:8180/mge/service.sbr?serviceName=MobileLoginSP.login&outputType=json';
+  String body =
+      "{\"serviceName\":\"MobileLoginSP.login\",\"requestBody\":{\"NOMUSU\":{\"\$\":\"GABRIEL\"},\"INTERNO\":{\"\$\":\"gabriel123456\"},\"KEEPCONNECTED\":{\"\$\":\"S\"}}}";
+  var response = await Dio().post(url, data: body);
+  return response.data['responseBody']['jsessionid']['\$'].toString();
+}
+
+logoutSkw(String jsession) async {
+  String url =
+      'http://sankhya.grancoffee.com.br:8180/mge/service.sbr?serviceName=MobileLoginSP.logout&outputType=json&mgeSession=$jsession';
+  String body =
+      "\"serviceName\":\"MobileLoginSP.logout\",\"status\":\"1\",\"pendingPrinting\":\"false\",}";
+  await Dio().post(url, data: body);
 }

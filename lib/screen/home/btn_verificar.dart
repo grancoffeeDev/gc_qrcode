@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+// ignore: must_be_immutable
 class BtnVerificar extends StatelessWidget {
   void Function() verificar;
   void Function() limpar;
@@ -33,7 +34,7 @@ class BtnVerificar extends StatelessWidget {
           child: ElevatedButton(
             onPressed: limpar,
             style: ElevatedButton.styleFrom(
-                primary: Color.fromARGB(255, 216, 125, 21)),
+                primary: const Color.fromARGB(255, 216, 125, 21)),
             child: Text(
               'LIMPAR',
               style: GoogleFonts.ubuntu(fontSize: 16),
