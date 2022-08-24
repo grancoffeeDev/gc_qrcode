@@ -31,7 +31,7 @@ class _HomeState extends State<Home> {
       ScanMode.QR,
     );
 
-    obs = _validacoes(code);
+    obs = await _validacoes(code);
 
     setState(() {
       if (code != '-1') {
@@ -57,35 +57,36 @@ class _HomeState extends State<Home> {
                 resultado: code, observacao: obs, valido: valido)
             : const AreaScannImg(),
         BtnVerificar(verificar: readQrCode, limpar: cleanCode),
-        ElevatedButton(
-            onPressed: () async {
-              String jsession = await loginSkw();
-              print(jsession);
-              logoutSkw(jsession.toString());
-            },
-            child: Text('OI'))
       ]),
       backgroundColor: Colors.white,
     );
   }
 }
 
-String _validacoes(String qrcode) {
+Future<String> _validacoes(String qrcode) async {
   String retorno = '';
 
   //TODO:: Verifica se é um link válido
   bool contains = qrcode.contains('#');
 
   if (!contains) {
-    retorno = 'ERRO! O QR code "$qrcode" não pertence a uma loja ou máquina!';
+    retorno = 'ERRO! O link "$qrcode" não pertence a uma loja ou máquina!';
   } else {
     //TODO:: Verifica o patrimônio
     int contagem = qrcode.indexOf('#');
     int totalcaracteres = qrcode.length;
     String pt = qrcode.substring(contagem + 1, totalcaracteres);
 
-    retorno = pt;
-    valido = true;
+    String jsession = await loginSkw();
+    int existe = await validaPatrimonio(jsession, pt);
+    if (existe > 0) {
+      retorno = pt;
+      valido = true;
+    } else {
+      retorno = 'ERRO! Patrimônio $pt Inválido!';
+    }
+    //print(retorno2);
+    await logoutSkw(jsession);
   }
 
   return retorno;
@@ -105,5 +106,21 @@ logoutSkw(String jsession) async {
       'http://sankhya.grancoffee.com.br:8180/mge/service.sbr?serviceName=MobileLoginSP.logout&outputType=json&mgeSession=$jsession';
   String body =
       "\"serviceName\":\"MobileLoginSP.logout\",\"status\":\"1\",\"pendingPrinting\":\"false\",}";
-  await Dio().post(url, data: body);
+  await Dio().post(url,
+      data: body,
+      options: Options(headers: {'Cookie': 'JSESSIONID=$jsession'}));
+}
+
+Future<int> validaPatrimonio(String jsession, String patrimonio) async {
+  String url =
+      'http://sankhya.grancoffee.com.br:8180/mge/service.sbr?serviceName=DbExplorerSP.executeQuery&mgeSession=$jsession';
+  String body =
+      '{"serviceName":"DbExplorerSP.executeQuery","requestBody":{"sql":"SELECT COUNT(*) AS QTD FROM TCIBEM WHERE CODBEM=\'$patrimonio\'"}}';
+  Response respose = await Dio().post(url,
+      data: body,
+      options: Options(
+          headers: {'Cookie': 'JSESSIONID=$jsession'},
+          responseType: ResponseType.json));
+  Map parsed = json.decode(respose.data);
+  return parsed['responseBody']['rows'][0][0];
 }
