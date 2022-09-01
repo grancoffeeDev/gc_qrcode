@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:gc_qrcode/screen/home/home.dart';
 
 void main() {
+  debugRepaintRainbowEnabled = false;
   runApp(const MyApp());
 }
 

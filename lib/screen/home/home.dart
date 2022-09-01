@@ -52,11 +52,14 @@ class _HomeState extends State<Home> {
       //appBar: AppBar(title: const Center(child: Text('Validador de QR Code'))),
       body: Column(children: [
         const AreaTexto(),
-        ticket
-            ? AreaScannResultado(
-                resultado: code, observacao: obs, valido: valido)
-            : const AreaScannImg(),
-        BtnVerificar(verificar: readQrCode, limpar: cleanCode),
+        RepaintBoundary(
+          child: ticket
+              ? AreaScannResultado(
+                  resultado: code, observacao: obs, valido: valido)
+              : const AreaScannImg(),
+        ),
+        RepaintBoundary(
+            child: BtnVerificar(verificar: readQrCode, limpar: cleanCode)),
       ]),
       backgroundColor: Colors.white,
     );
